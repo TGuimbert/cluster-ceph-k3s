@@ -1,0 +1,83 @@
+---
+- hosts: nodes
+  vars:
+    - ansible_password: '$6$NJ9wJWlh$8bV5radDt4eNrutVgoa8kOHCwRJEPFnBPyyDDDhdLlXHUnro1Nj1kWbnxbOT5zZHd.vbUwsguk2MJvw5eqe3m1'
+  gather_facts: no
+
+
+  tasks:
+
+  - name: 1. Add user ansible
+    user:
+         name=ansible
+         password={{ ansible_password }}
+         shell=/bin/bash
+         expires=-1
+   
+  - name: 2. Change Expire Password Account to never
+    #command: chage -E -1 ansible | grep -C 0 Account 
+    raw: "chage -l ansible |grep -C 0 Account" 
+
+  - name: 3. Add remote user to sudoers
+    lineinfile:
+         "dest=/etc/sudoers
+         regexp='^remote ALL'
+         line='ansible ALL=(ALL) NOPASSWD: ALL'
+         state=present"
+ 
+  - name: 4. install ssh key
+    authorized_key: user=ansible 
+                    key= " {{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+                    state=present		
+#  - name: 5.1 disable ssh root login 
+#    replace:
+#            path: /etc/ssh/sshd_config
+#            regexp: 'PermitRootLogin yes'
+#            replace: "PermitRootLogin no"
+#  - name: 5.2 disable password authentication 
+#    replace:
+#            path: /etc/ssh/sshd_config
+#            regexp: '#PasswordAuthentication yes'
+#            replace: "PasswordAuthentication no"
+#  - name: 5.3 disable pam 
+#    replace:
+#            path: /etc/ssh/sshd_config
+#            regexp: 'UsePAM yes'
+#            replace: "UsePAM no"
+#  - name: 5.4 disable ChallengeResponseAuthentication
+#    replace:
+#            path: /etc/ssh/sshd_config
+#            regexp: 'ChallengeResponseAuthentication no'
+#            replace: "ChallengeResponseAuthentication yes"
+#            
+
+  - name : '6.1 configure chrony - comment existing pool'
+    replace:
+        path: /etc/chrony/chrony.conf
+        regexp: '(^pool.*)'
+        replace : '# \1'
+  - name: '6.2 configure chrony - add ntp server'
+    lineinfile:
+            path: /etc/chrony/chrony.conf
+            insertbefore: '# pool ntp.ubuntu.com.*'
+            line: "server ns1.enic.fr offline"
+            state: present
+  - name: "6.3 configure chrony - add ntp server"
+    replace:
+            path: /etc/systemd/timesyncd.conf
+            regexp: '#NTP='
+            replace: 'NTP=ns1.enic.fr'
+  - name: "6.4 restart timesync "
+    systemd:
+            state: restarted
+            name: systemd-timesyncd
+  - name: "7 Update and upgrade apt packages"
+    apt:
+        upgrade: yes
+        update_cache: yes
+  - name: 8 Reboot
+     command: /sbin/shutdown -r +1 
+     async: 0 
+     poll: 0 
+     ignore_errors: true        
+
