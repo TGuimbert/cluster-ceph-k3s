@@ -1,11 +1,14 @@
 ---
-- hosts: nodes
+- hosts: osds
   vars:
     - ansible_password: '$6$NJ9wJWlh$8bV5radDt4eNrutVgoa8kOHCwRJEPFnBPyyDDDhdLlXHUnro1Nj1kWbnxbOT5zZHd.vbUwsguk2MJvw5eqe3m1'
   gather_facts: no
 
 
   tasks:
+  
+  - name: 0. Ping Pong
+    ping:
 
   - name: 1. Add user ansible
     user:
@@ -26,30 +29,31 @@
          state=present"
  
   - name: 4. install ssh key
-    authorized_key: user=ansible 
-                    key= " {{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
-                    state=present		
-#  - name: 5.1 disable ssh root login 
-#    replace:
-#            path: /etc/ssh/sshd_config
-#            regexp: 'PermitRootLogin yes'
-#            replace: "PermitRootLogin no"
-#  - name: 5.2 disable password authentication 
-#    replace:
-#            path: /etc/ssh/sshd_config
-#            regexp: '#PasswordAuthentication yes'
-#            replace: "PasswordAuthentication no"
-#  - name: 5.3 disable pam 
-#    replace:
-#            path: /etc/ssh/sshd_config
-#            regexp: 'UsePAM yes'
-#            replace: "UsePAM no"
-#  - name: 5.4 disable ChallengeResponseAuthentication
-#    replace:
-#            path: /etc/ssh/sshd_config
-#            regexp: 'ChallengeResponseAuthentication no'
-#            replace: "ChallengeResponseAuthentication yes"
-#            
+    authorized_key: 
+        user: ansible 
+        key: " {{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+        state: present		
+  - name: 5.1 disable ssh root login 
+    replace:
+            path: /etc/ssh/sshd_config
+            regexp: 'PermitRootLogin yes'
+            replace: "PermitRootLogin no"
+  - name: 5.2 disable password authentication 
+    replace:
+            path: /etc/ssh/sshd_config
+            regexp: '#PasswordAuthentication yes'
+            replace: "PasswordAuthentication no"
+  - name: 5.3 disable pam 
+    replace:
+            path: /etc/ssh/sshd_config
+            regexp: 'UsePAM yes'
+            replace: "UsePAM no"
+  - name: 5.4 disable ChallengeResponseAuthentication
+    replace:
+            path: /etc/ssh/sshd_config
+            regexp: 'ChallengeResponseAuthentication no'
+            replace: "ChallengeResponseAuthentication yes"
+            
 
   - name : '6.1 configure chrony - comment existing pool'
     replace:
@@ -75,9 +79,21 @@
     apt:
         upgrade: yes
         update_cache: yes
-  - name: 8 Reboot
-     command: /sbin/shutdown -r +1 
-     async: 0 
-     poll: 0 
-     ignore_errors: true        
-
+  - name: "8.1 configuration Cluster network"
+    blockinfile:
+            path: /etc/network/interfaces
+            block: |
+                    iface lan1 inet6 static
+                    address {{ ip2 }} 
+                    netmask 64
+  - name: 8.2 set lan1 up
+    command: ip link set up lan1
+  - name : 8.3 restart networking
+    systemd:
+            state: restarted
+            name: networking
+  - name: 9 Reboot
+    command: /sbin/shutdown -r +1
+    async: 0 
+    poll: 0 
+    ignore_errors: true 

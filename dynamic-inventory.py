@@ -43,32 +43,35 @@ for i in l :
     if mac not in lmac:
         lmac.append(mac)
     macDict[mac].append(i)
-hosts = []
 for mac in lmac:
     lla = mac2ipv6(mac)
-    hosts.append(lla)
     macDict[mac].append(lla) 
-print(hosts)
 
+#print(macDict)
 import json
 
 # writing
 json.dump(macDict, open('macMap.json', 'w'))
 
 # reading
-test = json.load(open('macMap.json'))
-for m in test:
-    print(m, ' : ', test[m])
+#test = json.load(open('macMap.json'))
+#for m in test:
+#    print(m, ' : ', test[m])
 
+
+import os
 
 MyFile=open('inventory.ini','w')
 
-MyFile.write("[nodes]")
+MyFile.write("[osds]")
 MyFile.write("\n")
-for ip in hosts:
-    temp = ip + "%lan0"
-    #print(temp)
-    MyFile.write(temp)
+for mac in macDict:
+    ip1 = macDict[mac][0]
+    ip2 = "fd17:67e7:6b1f:ffff" + macDict[mac][0][13:]
+    temp = macDict[mac][-1] + "%lan0"
+    #print(temp,ip1,ip2)
+    os.system("ssh-keyscan -t rsa "+ temp+" >> /home/ansible/.ssh/known_hosts")
+    MyFile.write(temp + " ip1="+ ip1 + " ip2=" + ip2)
     MyFile.write('\n')
 
 MyFile.close()
