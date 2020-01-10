@@ -83,6 +83,7 @@
     blockinfile:
             path: /etc/network/interfaces
             block: |
+                    auto lan1
                     iface lan1 inet6 static
                     address {{ ip2 }} 
                     netmask 64
@@ -92,8 +93,8 @@
     systemd:
             state: restarted
             name: networking
-  - name: 9 Reboot
-    command: /sbin/shutdown -r +1
-    async: 0 
-    poll: 0 
-    ignore_errors: true 
+#  - name: 9 Reboot
+#    command: /sbin/shutdown -r +1
+#    async: 0 
+#    poll: 0 
+#    ignore_errors: true 

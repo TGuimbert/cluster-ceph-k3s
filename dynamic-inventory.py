@@ -29,8 +29,10 @@ for mac in leases.get_current() :
     #print(lease)
     ip = lease.ip 
     if not ip in l:
-        output = subprocess.Popen(['ping', '-c', '1', ip ], stdout=subprocess.PIPE).communicate()[0]
-        if (not "Destination unreachable" in output.decode('utf-8')) and  (not "Request timed out" in output.decode('utf-8')):
+        output = subprocess.Popen(['ping', '-c', '2', ip ], stdout=subprocess.PIPE).communicate()[0]
+        #print(output.decode('utf-8'))
+        #if (not "Destination unreachable" in output.decode('utf-8')) and  (not "Request timed out" in output.decode('utf-8')):
+        if ", 0% packet loss" in output.decode('utf-8'):
             l.append(ip)
             print(ip)
             #print(output.decode('utf-8'))
@@ -67,7 +69,7 @@ MyFile.write("[osds]")
 MyFile.write("\n")
 for mac in macDict:
     ip1 = macDict[mac][0]
-    ip2 = "fd17:67e7:6b1f:ffff" + macDict[mac][0][13:]
+    ip2 = "fd17:67e7:6b1f:ffff" + macDict[mac][0][14:]
     temp = macDict[mac][-1] + "%lan0"
     #print(temp,ip1,ip2)
     os.system("ssh-keyscan -t rsa "+ temp+" >> /home/ansible/.ssh/known_hosts")
