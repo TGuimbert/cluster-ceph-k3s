@@ -1,0 +1,42 @@
+---
+# global/common requirement
+- name: stop nfs server service
+  systemd:
+    name: "{{ 'nfs-server' if ansible_os_family == 'RedHat' else 'nfsserver' if ansible_os_family == 'Suse' else 'nfs-kernel-server' if ansible_os_family == 'Debian' }}"
+    state: stopped
+    enabled: no
+  failed_when: false
+
+- name: include pre_requisite_non_container.yml
+  include_tasks: pre_requisite_non_container.yml
+  when: not containerized_deployment | bool
+
+- name: include pre_requisite_container.yml
+  include_tasks: pre_requisite_container.yml
+  when: containerized_deployment | bool
+
+- name: include create_rgw_nfs_user.yml
+  import_tasks: create_rgw_nfs_user.yml
+  when: groups.get(mon_group_name, []) | length > 0
+
+# NOTE (leseb): workaround for issues with ganesha and librgw
+- name: include ganesha_selinux_fix.yml
+  import_tasks: ganesha_selinux_fix.yml
+  when:
+    - not containerized_deployment | bool
+    - ansible_os_family == 'RedHat'
+
+- name: copy rgw keyring when deploying internal ganesha with external ceph cluster
+  copy:
+    src: "/etc/ceph/{{ cluster }}.{{ ceph_nfs_ceph_user.name }}.keyring"
+    dest: "/var/lib/ceph/radosgw/{{ cluster }}-rgw.{{ ansible_hostname }}/keyring"
+    mode: '0600'
+    owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
+    group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
+    remote_src: true
+  when:
+    - groups.get(mon_group_name, []) | length == 0
+    - ceph_nfs_ceph_user is defined
+
+- name: include start_nfs.yml
+  import_tasks: start_nfs.yml

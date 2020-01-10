@@ -1,0 +1,28 @@
+---
+- name: include multisite checks
+  include_tasks: checks.yml
+
+# Include the tasks depending on the zone type
+- name: include_tasks master.yml
+  include_tasks: master.yml
+  when:
+    - rgw_zonemaster | bool
+    - not rgw_zonesecondary | bool
+
+- name: include_tasks secondary.yml
+  include_tasks: secondary.yml
+  when:
+    - not rgw_zonemaster | bool
+    - rgw_zonesecondary | bool
+
+# Continue with common tasks
+- name: add zone to rgw stanza in ceph.conf
+  ini_file:
+    dest: "/etc/ceph/{{ cluster }}.conf"
+    section: "client.rgw.{{ ansible_hostname }}.{{ item.instance_name }}"
+    option: "rgw_zone"
+    value: "{{ rgw_zone }}"
+  with_items: "{{ rgw_instances }}"
+  when:
+    - rgw_instances is defined
+  notify: restart rgw

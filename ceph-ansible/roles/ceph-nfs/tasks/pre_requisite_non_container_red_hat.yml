@@ -1,0 +1,56 @@
+---
+- name: red hat based systems - repo handling
+  when: ceph_origin == 'repository'
+  block:
+    - name: add nfs-ganesha stable repository
+      yum_repository:
+        name: nfs_ganesha_stable
+        description: nfs-ganesha stable repo
+        gpgcheck: yes
+        state: present
+        gpgkey: "{{ ceph_stable_key }}"
+        baseurl: "{{ ceph_mirror }}/nfs-ganesha/rpm-{{ nfs_ganesha_stable_branch }}/{{ ceph_release }}/$basearch"
+      when:
+        - nfs_ganesha_stable | bool
+        - ceph_repository == 'community'
+
+    - name: red hat based systems - dev repo related tasks
+      block:
+        - name: add nfs-ganesha dev repo
+          yum_repository:
+            name: nfs-ganesha
+            baseurl: https://download.nfs-ganesha.org/3/LATEST/CentOS/el-$releasever/$basearch
+            description: nfs-ganesha repository
+            gpgcheck: true
+            gpgkey: https://download.nfs-ganesha.org/3/rsa.pub
+            file: nfs-ganesha-dev
+
+        - name: add nfs-ganesha dev noarch repo
+          yum_repository:
+            name: nfs-ganesha-noarch
+            baseurl: https://download.nfs-ganesha.org/3/LATEST/CentOS/el-$releasever/noarch
+            description: nfs-ganesha noarch repository
+            gpgcheck: true
+            gpgkey: https://download.nfs-ganesha.org/3/rsa.pub
+            file: nfs-ganesha-dev
+      when:
+        - nfs_ganesha_dev | bool
+        - ceph_repository == 'dev'
+
+- name: red hat based systems - install nfs packages
+  block:
+    - name: install nfs cephfs gateway
+      package:
+        name: ['nfs-ganesha-ceph', 'nfs-ganesha-rados-grace']
+        state: "{{ (upgrade_ceph_packages|bool) | ternary('latest','present') }}"
+      register: result
+      until: result is succeeded
+      when: nfs_file_gw
+
+    - name: install redhat nfs-ganesha-rgw and ceph-radosgw packages
+      package:
+        name: ['nfs-ganesha-rgw', 'nfs-ganesha-rados-grace', 'ceph-radosgw']
+        state: "{{ (upgrade_ceph_packages|bool) | ternary('latest','present') }}"
+      register: result
+      until: result is succeeded
+      when: nfs_obj_gw | bool
