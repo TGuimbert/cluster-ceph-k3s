@@ -1,0 +1,16 @@
+---
+- hosts: osds
+  vars:
+  gather_facts: no
+
+
+  tasks:
+  
+  - name: 0. Ping Pong
+    ping:
+
+  - name: 9 Reboot
+    reboot:
+            post_reboot_delay: 60
+            connect_timeout: 10
+    become: yes
