@@ -411,7 +411,7 @@ cluster_network: fd17:67e8:6b1f:ffff::/64
 # keepalive, and timeout settings, please see the civetweb docs at
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 #
-radosgw_civetweb_bind_ip: "[&#123;&#123; ansible_default_ipv6.address &#125;&#125;]"
+radosgw_civetweb_bind_ip: "[{{ansible_default_ipv6.address}}]"
 
 #radosgw_frontend_port: "{{ radosgw_civetweb_port if radosgw_frontend_type == 'civetweb' else '8080' }}"
 # The server private key, public certificate and any other CA or intermediate certificates should be in one file, in PEM format.
