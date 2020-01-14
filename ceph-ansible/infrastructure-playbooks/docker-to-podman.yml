@@ -47,12 +47,6 @@
     - "{{ iscsi_gw_group_name | default('iscsigws') }}"
     - "{{ rbdmirror_group_name | default('rbdmirrors') }}"
   become: true
-  vars:
-    docker2podman: True
-    container_binary: podman
-    container_binding_name: podman
-    container_service_name: podman
-    container_package_name: podman
   pre_tasks:
     - import_role:
         name: ceph-defaults
@@ -73,6 +67,24 @@
 
 
   tasks:
+    - name: set_fact container_binary, container_binding_name, container_service_name, container_package_name
+      set_fact:
+        docker2podman: True
+        container_binary: podman
+        container_binding_name: podman
+        container_service_name: podman
+        container_package_name: podman
+
+    - name: install podman
+      package:
+        name: podman
+        state: present
+      register: result
+      until: result is succeeded
+      tags:
+        - with_pkg
+      when: not is_atomic | bool
+
     - import_role:
         name: ceph-mon
         tasks_from: systemd.yml
@@ -112,3 +124,7 @@
         name: ceph-rgw
         tasks_from: systemd.yml
       when: inventory_hostname in groups.get(rgw_group_name, [])
+
+    - name: reload ceph monitor systemd unit
+      systemd:
+        daemon_reload: yes
