@@ -1,0 +1,16 @@
+[Unit]
+Description=Lightweight Kubernetes
+Documentation=https://k3s.io
+After=network.target
+[Service]
+ExecStartPre=-/sbin/modprobe br_netfilter
+ExecStartPre=-/sbin/modprobe overlay
+ExecStart=/usr/local/bin/k3s server --no-flannel --no-deploy coredns --no-deploy servicelb --no-deploy traefik --disable-agent --tls-san fd17:67e8:6b1f::1 --cluster-cidr fd17:67e8:6b1f::/64 --service-cidr fd17:67e8:6b1f::/64 --node-ip fd17:67e8:6b1f::1 --kube-controller-arg node-cidr-mask-size=120 
+KillMode=process
+Delegate=yes
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+[Install]
+WantedBy=multi-user.target
