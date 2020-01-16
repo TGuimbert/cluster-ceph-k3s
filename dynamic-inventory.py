@@ -64,19 +64,29 @@ json.dump(macDict, open('macMap.json', 'w'))
 import os
 
 MyFile=open('inventory.ini','w')
+BlockFile=open('roles/all/files/host_bloc','w')
 
 MyFile.write("[osds]")
 MyFile.write("\n")
+i=1
 for mac in macDict:
     ip1 = macDict[mac][0]
     ip2 = "fd17:67e7:6b1f:ffff" + macDict[mac][0][14:]
     temp = macDict[mac][-1] + "%lan0"
     #print(temp,ip1,ip2)
     os.system("ssh-keyscan -t rsa "+ temp+" >> /home/ansible/.ssh/known_hosts")
-    MyFile.write(temp + " ip1="+ ip1 + " ip2=" + ip2)
+    MyFile.write(temp + " ip1="+ ip1 + " ip2=" + ip2+ " name=node"+str(i))
+    BlockFile.write(ip1 +" node"+ str(i)+"\n")
+    i+=1
     MyFile.write('\n')
 
+MyFile.write('[master] \nlocalhost ip1=fd17:67e8:6b1f::1 name=master\n')
+BlockFile.write("fd17:67e8:6b1f::1 master")
 MyFile.close()
+BlockFile.close()
+
+os.system("ssh-keyscan -t rsa localhost >> /home/ansible/.ssh/known_hosts")
+
 
 print("Done")
 
