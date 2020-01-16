@@ -1,0 +1,62 @@
+---
+  - name: 0. Ping Pong
+    ping:
+   
+
+  - name: 3. Add remote user to sudoers
+    lineinfile:
+         "dest=/etc/sudoers
+         regexp='^remote ALL'
+         line='ansible ALL=(ALL) NOPASSWD: ALL'
+         state=present"
+ 
+  - name: 4. install ssh key
+    authorized_key: 
+        user: ansible 
+        key: " {{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+        state: present		
+
+
+  - name : '6.1 configure chrony - comment existing pool'
+    replace:
+        path: /etc/chrony/chrony.conf
+        regexp: '(^pool.*)'
+        replace : '# \1'
+  - name: '6.2 configure chrony - add ntp server'
+    lineinfile:
+            path: /etc/chrony/chrony.conf
+            insertbefore: '# pool ntp.ubuntu.com.*'
+            line: "server ns1.enic.fr offline"
+            state: present
+  - name: "6.3 configure chrony - add ntp server"
+    replace:
+            path: /etc/systemd/timesyncd.conf
+            regexp: '#NTP='
+            replace: 'NTP=ns1.enic.fr'
+  - name: "6.4 restart timesync "
+    systemd:
+            state: restarted
+            name: systemd-timesyncd
+  - name: "6.5 set-ntp true to enable auto ntp"
+    command: timedatectl set-ntp true
+
+  - name: "add node1 to knowns host" 
+    shell: /usr/bin/ssh-keyscan -t rsa node1 >> /home/ansible/.ssh/known_hosts
+  - name: "add node2 to knowns host" 
+    shell: /usr/bin/ssh-keyscan -t rsa node2 >> /home/ansible/.ssh/known_hosts
+  - name: "add node3 to knowns host" 
+    shell: /usr/bin/ssh-keyscan -t rsa node3 >> /home/ansible/.ssh/known_hosts
+  - name: "add node4 to knowns host" 
+    shell: /usr/bin/ssh-keyscan -t rsa node4 >> /home/ansible/.ssh/known_hosts
+  - name: "add master to knowns host"
+    shell: /usr/bin/ssh-keyscan -t rsa master >> /home/ansible/.ssh/known_hosts
+
+
+
+
+
+#  - name: 9 Reboot
+#    command: /sbin/shutdown -r +1
+#    async: 0 
+#    poll: 0 
+#    ignore_errors: true 

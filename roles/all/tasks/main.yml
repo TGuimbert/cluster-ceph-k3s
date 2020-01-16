@@ -1,0 +1,27 @@
+---
+- name: "Add loopback in /etc/hosts"
+  lineinfile:
+          path: /etc/hosts
+          regexp: '^127\.0\.0\.1'
+          line: "127.0.0.1 localhost {{ name }}"
+          owner: root
+          group: root
+          mode: '0644'
+
+- name: "Add loopback in /etc/hosts"
+  lineinfile:
+          path: /etc/hosts
+          regexp: '^::1'
+          line: "::1 localhost {{ name }} ip6-loopback ip6-localhost"
+          owner: root
+          group: root
+          mode: '0644'
+
+- name: "Add hostname"
+  hostname: 
+        name: "{{ name }}"
+- name: "Insert ip in /etc/hosts"
+  blockinfile:
+          path: /etc/hosts 
+          block: "{{ lookup('file','roles/all/files/host_bloc') }}"
+          backup: yes 

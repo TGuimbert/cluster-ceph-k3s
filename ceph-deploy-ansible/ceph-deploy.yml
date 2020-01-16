@@ -1,0 +1,6 @@
+---
+- hosts: webservers
+  tasks:
+          - name: add monitors on master  
+             debug: msg="this runs only on B
+            when: "'group_B' in {{group_names}}"
