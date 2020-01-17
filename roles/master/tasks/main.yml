@@ -3,20 +3,6 @@
     ping:
    
 
-  - name: 3. Add remote user to sudoers
-    lineinfile:
-         "dest=/etc/sudoers
-         regexp='^remote ALL'
-         line='ansible ALL=(ALL) NOPASSWD: ALL'
-         state=present"
- 
-  - name: 4. install ssh key
-    authorized_key: 
-        user: ansible 
-        key: " {{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
-        state: present		
-
-
   - name : '6.1 configure chrony - comment existing pool'
     replace:
         path: /etc/chrony/chrony.conf

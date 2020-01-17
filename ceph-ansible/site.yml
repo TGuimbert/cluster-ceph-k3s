@@ -4,12 +4,12 @@
 - hosts:
   - mons
   - osds
-    #  - mdss
-    #  - rgws
+  - mdss
+  - rgws
     #  - nfss
     #  - rbdmirrors
-    #  - clients
-    #  - mgrs
+  - clients
+  - mgrs
     #  - iscsigws
     #  - iscsi-gws # for backward compatibility only!
   - grafana

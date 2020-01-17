@@ -325,14 +325,14 @@ generate_fsid: true
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each monitor which address the monitor will bind to you can set it in your **inventory host file** by using 'monitor_address' variable.
 # Preference will go to monitor_address if both monitor_address and monitor_interface are defined.
-#monitor_interface: lan0
-monitor_address: fd17:67e8:6b1f::1
+monitor_interface: lan0
+#monitor_address: fd17:67e8:6b1f::1
 #monitor_address_block: subnet
 # set to either ipv4 or ipv6, whichever your network is using
 ip_version: ipv6
 #mon_use_fqdn: false # if set to true, the MON name used will be the fqdn in the ceph.conf
 
-mon_host: fd17:67e8:6b1f::1
+#mon_host: fd17:67e8:6b1f::1
 #mon_host_v1:
 # enabled: False
 # suffix: ':6789'
